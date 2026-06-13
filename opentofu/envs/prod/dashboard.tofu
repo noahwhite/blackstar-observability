@@ -263,7 +263,7 @@ resource "grafana_dashboard" "node_health" {
         }
         targets = [{
           expr         = "node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=\"platform_coretemp_0\"}"
-          legendFormat = "{{ instance }} {{ sensor }}"
+          legendFormat = "{{ instance }} {{ chip_alias }} {{ sensor }}"
           refId        = "A"
         }]
       },
@@ -297,7 +297,7 @@ resource "grafana_dashboard" "node_health" {
         }
         targets = [{
           expr         = "node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"nvme_nvme.*|target.*\"}"
-          legendFormat = "{{ instance }} {{ chip }} {{ sensor }}"
+          legendFormat = "{{ instance }} {{ chip_alias }} {{ sensor }}"
           refId        = "A"
         }]
       },
