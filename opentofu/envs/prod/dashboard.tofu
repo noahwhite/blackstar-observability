@@ -75,7 +75,7 @@ resource "grafana_dashboard" "node_health" {
       {
         id      = 2
         type    = "stat"
-        title   = "NVMe Max Temp"
+        title   = "Drive Max Temp"
         gridPos = { h = 4, w = 5, x = 5, y = 1 }
         datasource = {
           type = "prometheus"
@@ -103,7 +103,7 @@ resource "grafana_dashboard" "node_health" {
           textMode      = "auto"
         }
         targets = [{
-          expr         = "max by (instance) (node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"nvme_nvme.*\", sensor=\"temp1\"})"
+          expr         = "max by (instance) (node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"nvme_nvme.*|target.*\", sensor=\"temp1\"})"
           legendFormat = "{{ instance }}"
           refId        = "A"
           instant      = true
@@ -271,7 +271,7 @@ resource "grafana_dashboard" "node_health" {
       {
         id      = 11
         type    = "timeseries"
-        title   = "NVMe Drive Temperatures"
+        title   = "Drive Temperatures"
         gridPos = { h = 8, w = 12, x = 12, y = 6 }
         datasource = {
           type = "prometheus"
@@ -296,7 +296,7 @@ resource "grafana_dashboard" "node_health" {
           legend  = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull", "max"] }
         }
         targets = [{
-          expr         = "node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"nvme_nvme.*\"}"
+          expr         = "node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"nvme_nvme.*|target.*\"}"
           legendFormat = "{{ instance }} {{ chip }} {{ sensor }}"
           refId        = "A"
         }]
