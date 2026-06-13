@@ -238,7 +238,7 @@ resource "grafana_dashboard" "node_health" {
         id      = 10
         type    = "timeseries"
         title   = "CPU Core Temperatures"
-        gridPos = { h = 8, w = 12, x = 0, y = 6 }
+        gridPos = { h = 8, w = 8, x = 0, y = 6 }
         datasource = {
           type = "prometheus"
           uid  = data.grafana_data_source.prometheus.uid
@@ -272,7 +272,7 @@ resource "grafana_dashboard" "node_health" {
         id      = 11
         type    = "timeseries"
         title   = "Drive Temperatures"
-        gridPos = { h = 8, w = 12, x = 12, y = 6 }
+        gridPos = { h = 8, w = 8, x = 8, y = 6 }
         datasource = {
           type = "prometheus"
           uid  = data.grafana_data_source.prometheus.uid
@@ -298,6 +298,33 @@ resource "grafana_dashboard" "node_health" {
         targets = [{
           expr         = "node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"nvme_nvme.*|target.*\"}"
           legendFormat = "{{ instance }} {{ chip_alias }} {{ sensor }}"
+          refId        = "A"
+        }]
+      },
+
+      {
+        id      = 12
+        type    = "timeseries"
+        title   = "10Gb NIC Temperature"
+        gridPos = { h = 8, w = 8, x = 16, y = 6 }
+        datasource = {
+          type = "prometheus"
+          uid  = data.grafana_data_source.prometheus.uid
+        }
+        fieldConfig = {
+          defaults = {
+            unit   = "celsius"
+            custom = { drawStyle = "line", fillOpacity = 5 }
+          }
+          overrides = []
+        }
+        options = {
+          tooltip = { mode = "multi", sort = "desc" }
+          legend  = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull", "max"] }
+        }
+        targets = [{
+          expr         = "node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"0000:07.*\", sensor=\"temp2\"}"
+          legendFormat = "{{ instance }} {{ chip_alias }} MAC"
           refId        = "A"
         }]
       },
