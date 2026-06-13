@@ -92,7 +92,7 @@ resource "grafana_rule_group" "node_health" {
   }
 
   rule {
-    name      = "NVMe Temperature High"
+    name      = "Drive Temperature High"
     condition = "C"
     for       = "5m"
 
@@ -100,8 +100,8 @@ resource "grafana_rule_group" "node_health" {
     exec_err_state = "Error"
 
     annotations = {
-      summary     = "NVMe composite temperature > 65°C on {{ $labels.instance }}"
-      description = "NVMe drive running hot. Drives typically throttle at 70-75°C. Check airflow."
+      summary     = "Drive temperature > 65°C on {{ $labels.instance }} ({{ $labels.chip }})"
+      description = "Drive running hot. NVMe/SATA drives typically throttle at 70-75°C. Check airflow."
     }
 
     labels = {
@@ -119,7 +119,7 @@ resource "grafana_rule_group" "node_health" {
       model = jsonencode({
         datasource   = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         editorMode   = "code"
-        expr         = "max by (instance, chip) (node_hwmon_temp_celsius{job=\"integrations/unix\", chip=~\"nvme_nvme.*\", sensor=\"temp1\"})"
+        expr         = "max by (instance, chip) (node_hwmon_temp_celsius{job=\"integrations/unix\", chip=~\"nvme_nvme.*|target.*\", sensor=\"temp1\"})"
         legendFormat = "{{ instance }} {{ chip }}"
         refId        = "A"
       })
