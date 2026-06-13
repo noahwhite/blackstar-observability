@@ -451,8 +451,122 @@ resource "grafana_dashboard" "node_health" {
 
       {
         type      = "row"
-        title     = "Network"
+        title     = "Storage I/O"
         gridPos   = { h = 1, w = 24, x = 0, y = 31 }
+        collapsed = false
+      },
+
+      {
+        id      = 40
+        type    = "timeseries"
+        title   = "Disk Throughput"
+        gridPos = { h = 8, w = 12, x = 0, y = 32 }
+        datasource = {
+          type = "prometheus"
+          uid  = data.grafana_data_source.prometheus.uid
+        }
+        fieldConfig = {
+          defaults = {
+            unit   = "Bps"
+            custom = { drawStyle = "line", fillOpacity = 10 }
+          }
+          overrides = [
+            {
+              matcher    = { id = "byRegexp", options = ".*Write.*" }
+              properties = [{ id = "custom.transform", value = "negative-Y" }]
+            }
+          ]
+        }
+        options = {
+          tooltip = { mode = "multi", sort = "desc" }
+          legend  = { displayMode = "list", placement = "bottom" }
+        }
+        targets = [
+          {
+            expr         = "rate(node_disk_read_bytes_total{job=\"integrations/unix\", instance=~\"$instance\", device=~\"sda|nvme.*\"}[5m])"
+            legendFormat = "{{ instance }} {{ device }} Read"
+            refId        = "A"
+          },
+          {
+            expr         = "rate(node_disk_written_bytes_total{job=\"integrations/unix\", instance=~\"$instance\", device=~\"sda|nvme.*\"}[5m])"
+            legendFormat = "{{ instance }} {{ device }} Write"
+            refId        = "B"
+          },
+        ]
+      },
+
+      {
+        id      = 41
+        type    = "timeseries"
+        title   = "Disk IOPS"
+        gridPos = { h = 8, w = 12, x = 12, y = 32 }
+        datasource = {
+          type = "prometheus"
+          uid  = data.grafana_data_source.prometheus.uid
+        }
+        fieldConfig = {
+          defaults = {
+            unit   = "iops"
+            custom = { drawStyle = "line", fillOpacity = 10 }
+          }
+          overrides = [
+            {
+              matcher    = { id = "byRegexp", options = ".*Write.*" }
+              properties = [{ id = "custom.transform", value = "negative-Y" }]
+            }
+          ]
+        }
+        options = {
+          tooltip = { mode = "multi", sort = "desc" }
+          legend  = { displayMode = "list", placement = "bottom" }
+        }
+        targets = [
+          {
+            expr         = "rate(node_disk_reads_completed_total{job=\"integrations/unix\", instance=~\"$instance\", device=~\"sda|nvme.*\"}[5m])"
+            legendFormat = "{{ instance }} {{ device }} Read"
+            refId        = "A"
+          },
+          {
+            expr         = "rate(node_disk_writes_completed_total{job=\"integrations/unix\", instance=~\"$instance\", device=~\"sda|nvme.*\"}[5m])"
+            legendFormat = "{{ instance }} {{ device }} Write"
+            refId        = "B"
+          },
+        ]
+      },
+
+      {
+        id      = 42
+        type    = "timeseries"
+        title   = "Disk Utilization"
+        gridPos = { h = 8, w = 24, x = 0, y = 40 }
+        datasource = {
+          type = "prometheus"
+          uid  = data.grafana_data_source.prometheus.uid
+        }
+        fieldConfig = {
+          defaults = {
+            unit   = "percentunit"
+            min    = 0
+            max    = 1
+            custom = { drawStyle = "line", fillOpacity = 10 }
+          }
+          overrides = []
+        }
+        options = {
+          tooltip = { mode = "multi", sort = "desc" }
+          legend  = { displayMode = "list", placement = "bottom" }
+        }
+        targets = [{
+          expr         = "rate(node_disk_io_time_seconds_total{job=\"integrations/unix\", instance=~\"$instance\", device=~\"sda|nvme.*\"}[5m])"
+          legendFormat = "{{ instance }} {{ device }}"
+          refId        = "A"
+        }]
+      },
+
+      {
+        type      = "row"
+        title     = "Network"
+        gridPos   = { h = 1, w = 24, x = 0, y = 48 }
         collapsed = false
       },
 
@@ -460,7 +574,7 @@ resource "grafana_dashboard" "node_health" {
         id      = 30
         type    = "timeseries"
         title   = "Network I/O"
-        gridPos = { h = 8, w = 24, x = 0, y = 32 }
+        gridPos = { h = 8, w = 24, x = 0, y = 49 }
         datasource = {
           type = "prometheus"
           uid  = data.grafana_data_source.prometheus.uid
