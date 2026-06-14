@@ -249,10 +249,33 @@ resource "grafana_dashboard" "node_health" {
         }]
       },
       {
+        id         = 13
+        type       = "timeseries"
+        title      = "CPU Fan Speed"
+        gridPos    = { h = 8, w = 6, x = 6, y = 6 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit   = "rpm"
+            custom = { drawStyle = "line", fillOpacity = 10 }
+          }
+          overrides = []
+        }
+        options = {
+          tooltip = { mode = "multi", sort = "desc" }
+          legend  = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull", "max"] }
+        }
+        targets = [{
+          expr         = "node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"$instance\"}"
+          legendFormat = "{{ instance }} {{ chip_alias }} {{ sensor }}"
+          refId        = "A"
+        }]
+      },
+      {
         id         = 11
         type       = "timeseries"
         title      = "Drive Temperatures"
-        gridPos    = { h = 8, w = 6, x = 6, y = 6 }
+        gridPos    = { h = 8, w = 6, x = 12, y = 6 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -276,7 +299,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 12
         type       = "timeseries"
         title      = "10Gb NIC Temperature"
-        gridPos    = { h = 8, w = 6, x = 12, y = 6 }
+        gridPos    = { h = 8, w = 6, x = 18, y = 6 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -292,29 +315,6 @@ resource "grafana_dashboard" "node_health" {
         targets = [{
           expr         = "node_hwmon_temp_celsius{job=\"integrations/unix\", instance=~\"$instance\", chip=~\"0000:07.*\", sensor=\"temp2\"}"
           legendFormat = "{{ instance }} {{ chip_alias }} MAC"
-          refId        = "A"
-        }]
-      },
-      {
-        id         = 13
-        type       = "timeseries"
-        title      = "Fan Speed"
-        gridPos    = { h = 8, w = 6, x = 18, y = 6 }
-        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
-        fieldConfig = {
-          defaults = {
-            unit   = "rpm"
-            custom = { drawStyle = "line", fillOpacity = 10 }
-          }
-          overrides = []
-        }
-        options = {
-          tooltip = { mode = "multi", sort = "desc" }
-          legend  = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull", "max"] }
-        }
-        targets = [{
-          expr         = "node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"$instance\"}"
-          legendFormat = "{{ instance }} {{ chip_alias }} {{ sensor }}"
           refId        = "A"
         }]
       },
