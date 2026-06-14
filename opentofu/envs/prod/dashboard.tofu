@@ -267,7 +267,7 @@ resource "grafana_dashboard" "node_health" {
         }
         targets = [{
           expr         = "node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"$instance\"}"
-          legendFormat = "{{ instance }} {{ chip_alias }} {{ sensor }}"
+          legendFormat = "{{ instance }} cpu fan"
           refId        = "A"
         }]
       },
