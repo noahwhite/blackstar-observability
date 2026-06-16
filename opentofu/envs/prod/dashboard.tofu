@@ -611,8 +611,8 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { tooltip = { mode = "multi", sort = "desc" }, legend = { displayMode = "list", placement = "bottom" } }
         targets = [
-          { expr = "rate(node_network_receive_bytes_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Rx", refId = "A" },
-          { expr = "rate(node_network_transmit_bytes_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Tx", refId = "B" },
+          { expr = "rate(node_network_receive_bytes_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|wlp.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Rx", refId = "A" },
+          { expr = "rate(node_network_transmit_bytes_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|wlp.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Tx", refId = "B" },
         ]
       },
       {
@@ -627,10 +627,10 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { tooltip = { mode = "multi", sort = "desc" }, legend = { displayMode = "list", placement = "bottom" } }
         targets = [
-          { expr = "rate(node_network_receive_errs_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Rx Errors", refId = "A" },
-          { expr = "rate(node_network_transmit_errs_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Tx Errors", refId = "B" },
-          { expr = "rate(node_network_receive_drop_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Rx Drops", refId = "C" },
-          { expr = "rate(node_network_transmit_drop_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Tx Drops", refId = "D" },
+          { expr = "rate(node_network_receive_errs_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|wlp.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Rx Errors", refId = "A" },
+          { expr = "rate(node_network_transmit_errs_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|wlp.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Tx Errors", refId = "B" },
+          { expr = "rate(node_network_receive_drop_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|wlp.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Rx Drops", refId = "C" },
+          { expr = "rate(node_network_transmit_drop_total{job=\"integrations/unix\", instance=~\"$instance\", device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|wlp.*\"}[5m])", legendFormat = "{{ instance }} {{ device }} Tx Drops", refId = "D" },
         ]
       },
 
@@ -725,8 +725,8 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
         targets = [{
-          expr         = "mtxrHlTemperature{job=\"integrations/snmp-mikrotik\"} / 10"
-          legendFormat = "Board"
+          expr         = "mtxrHlProcessorTemperature{job=\"integrations/snmp/crs305\"} / 10"
+          legendFormat = "CPU"
           refId        = "A"
           instant      = true
         }]
@@ -756,7 +756,7 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
         targets = [{
-          expr         = "mtxrHlCpuLoad{job=\"integrations/snmp-mikrotik\"}"
+          expr         = "hrProcessorLoad{job=\"integrations/snmp/crs305\"}"
           legendFormat = "CPU"
           refId        = "A"
           instant      = true
@@ -786,7 +786,7 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, orientation = "auto" }
         targets = [{
-          expr         = "1 - (mtxrHlFreeMemory{job=\"integrations/snmp-mikrotik\"} / mtxrHlTotalMemory{job=\"integrations/snmp-mikrotik\"})"
+          expr         = "hrStorageUsed{job=\"integrations/snmp/crs305\",hrStorageDescr=\"main memory\"} / hrStorageSize{job=\"integrations/snmp/crs305\",hrStorageDescr=\"main memory\"}"
           legendFormat = "Used"
           refId        = "A"
           instant      = true
@@ -813,7 +813,7 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
         targets = [{
-          expr         = "sysUpTime{job=\"integrations/snmp-mikrotik\"} / 100"
+          expr         = "sysUpTime{job=\"integrations/snmp/crs305\"} / 100"
           legendFormat = "Uptime"
           refId        = "A"
           instant      = true
@@ -831,15 +831,15 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { tooltip = { mode = "multi", sort = "desc" }, legend = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull"] } }
         targets = [
-          { expr = "rate(ifHCInOctets{job=\"integrations/snmp-mikrotik\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Rx", refId = "A" },
-          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp-mikrotik\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/crs305\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/crs305\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
         ]
       },
       {
         id         = 75
         type       = "timeseries"
-        title      = "Switch Temperatures"
-        gridPos    = { h = 8, w = 12, x = 12, y = 88 }
+        title      = "Switch Temperature History"
+        gridPos    = { h = 8, w = 6, x = 12, y = 88 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -855,16 +855,41 @@ resource "grafana_dashboard" "node_health" {
         }
         targets = [
           {
-            expr         = "mtxrHlTemperature{job=\"integrations/snmp-mikrotik\"} / 10"
-            legendFormat = "Board"
+            expr         = "mtxrHlProcessorTemperature{job=\"integrations/snmp/crs305\"} / 10"
+            legendFormat = "CPU"
             refId        = "A"
           },
-          {
-            expr         = "mtxrHlProcessorTemperature{job=\"integrations/snmp-mikrotik\"} / 10"
-            legendFormat = "CPU"
-            refId        = "B"
-          },
         ]
+      },
+      {
+        id         = 76
+        type       = "gauge"
+        title      = "Switch Disk"
+        gridPos    = { h = 8, w = 6, x = 18, y = 88 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit = "percentunit"
+            min  = 0
+            max  = 1
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "green", value = null },
+                { color = "yellow", value = 0.7 },
+                { color = "red", value = 0.9 },
+              ]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, orientation = "auto" }
+        targets = [{
+          expr         = "hrStorageUsed{job=\"integrations/snmp/crs305\",hrStorageDescr=\"system disk\"} / hrStorageSize{job=\"integrations/snmp/crs305\",hrStorageDescr=\"system disk\"}"
+          legendFormat = "Used"
+          refId        = "A"
+          instant      = true
+        }]
       },
     ]
   })
