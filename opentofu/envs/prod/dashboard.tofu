@@ -891,6 +891,84 @@ resource "grafana_dashboard" "node_health" {
           instant      = true
         }]
       },
+      # =================================================================
+      # Top-of-Rack Switch (TP-Link SG2210P)
+      # =================================================================
+      {
+        type      = "row"
+        title     = "Top-of-Rack Switch (SG2210P)"
+        gridPos   = { h = 1, w = 24, x = 0, y = 96 }
+        collapsed = false
+      },
+      {
+        id         = 80
+        type       = "stat"
+        title      = "TOR Uptime"
+        gridPos    = { h = 4, w = 6, x = 0, y = 97 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit = "s"
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "orange", value = null },
+                { color = "green", value = 3600 },
+              ]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
+        targets = [{
+          expr         = "sysUpTime{job=\"integrations/snmp/sg2210p\"} / 100"
+          legendFormat = "Uptime"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 81
+        type       = "stat"
+        title      = "TOR Port Status"
+        gridPos    = { h = 4, w = 18, x = 6, y = 97 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+            thresholds = {
+              mode  = "absolute"
+              steps = [{ color = "text", value = null }]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
+        targets = [{
+          expr         = "ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}"
+          legendFormat = "{{ ifDescr }}"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 82
+        type       = "timeseries"
+        title      = "TOR Port Traffic"
+        gridPos    = { h = 8, w = 24, x = 0, y = 101 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
+          overrides = [{ matcher = { id = "byRegexp", options = ".*Tx.*" }, properties = [{ id = "custom.transform", value = "negative-Y" }] }]
+        }
+        options = { tooltip = { mode = "multi", sort = "desc" }, legend = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull"] } }
+        targets = [
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
+        ]
+      },
     ]
   })
 }
