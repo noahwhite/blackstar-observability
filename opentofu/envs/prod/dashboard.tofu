@@ -692,6 +692,180 @@ resource "grafana_dashboard" "node_health" {
           { expr = "rate(node_pressure_io_stalled_seconds_total{job=\"integrations/unix\", instance=~\"$instance\"}[5m])", legendFormat = "{{ instance }} full", refId = "B" },
         ]
       },
+
+      # =================================================================
+      # Network Switch (MikroTik CRS305)
+      # =================================================================
+      {
+        type      = "row"
+        title     = "Network Switch (CRS305)"
+        gridPos   = { h = 1, w = 24, x = 0, y = 83 }
+        collapsed = false
+      },
+      {
+        id         = 70
+        type       = "stat"
+        title      = "Switch Temperature"
+        gridPos    = { h = 4, w = 6, x = 0, y = 84 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit = "celsius"
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "green", value = null },
+                { color = "yellow", value = 50 },
+                { color = "orange", value = 60 },
+                { color = "red", value = 70 },
+              ]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
+        targets = [{
+          expr         = "mtxrHlTemperature{job=\"integrations/snmp-mikrotik\"} / 10"
+          legendFormat = "Board"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 71
+        type       = "stat"
+        title      = "Switch CPU Load"
+        gridPos    = { h = 4, w = 6, x = 6, y = 84 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit = "percent"
+            min  = 0
+            max  = 100
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "green", value = null },
+                { color = "yellow", value = 60 },
+                { color = "orange", value = 80 },
+                { color = "red", value = 95 },
+              ]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
+        targets = [{
+          expr         = "mtxrHlCpuLoad{job=\"integrations/snmp-mikrotik\"}"
+          legendFormat = "CPU"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 72
+        type       = "gauge"
+        title      = "Switch Memory"
+        gridPos    = { h = 4, w = 6, x = 12, y = 84 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit = "percentunit"
+            min  = 0
+            max  = 1
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "green", value = null },
+                { color = "yellow", value = 0.7 },
+                { color = "red", value = 0.9 },
+              ]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, orientation = "auto" }
+        targets = [{
+          expr         = "1 - (mtxrHlFreeMemory{job=\"integrations/snmp-mikrotik\"} / mtxrHlTotalMemory{job=\"integrations/snmp-mikrotik\"})"
+          legendFormat = "Used"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 73
+        type       = "stat"
+        title      = "Switch Uptime"
+        gridPos    = { h = 4, w = 6, x = 18, y = 84 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit = "s"
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "orange", value = null },
+                { color = "green", value = 3600 },
+              ]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
+        targets = [{
+          expr         = "sysUpTime{job=\"integrations/snmp-mikrotik\"} / 100"
+          legendFormat = "Uptime"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 74
+        type       = "timeseries"
+        title      = "Switch Port Traffic"
+        gridPos    = { h = 8, w = 12, x = 0, y = 88 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
+          overrides = [{ matcher = { id = "byRegexp", options = ".*Tx.*" }, properties = [{ id = "custom.transform", value = "negative-Y" }] }]
+        }
+        options = { tooltip = { mode = "multi", sort = "desc" }, legend = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull"] } }
+        targets = [
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp-mikrotik\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp-mikrotik\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
+        ]
+      },
+      {
+        id         = 75
+        type       = "timeseries"
+        title      = "Switch Temperatures"
+        gridPos    = { h = 8, w = 12, x = 12, y = 88 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit       = "celsius"
+            custom     = { drawStyle = "line", fillOpacity = 5 }
+            thresholds = { mode = "absolute", steps = [{ color = "green", value = null }, { color = "red", value = 70 }] }
+          }
+          overrides = []
+        }
+        options = {
+          tooltip = { mode = "multi", sort = "desc" }
+          legend  = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull", "max"] }
+        }
+        targets = [
+          {
+            expr         = "mtxrHlTemperature{job=\"integrations/snmp-mikrotik\"} / 10"
+            legendFormat = "Board"
+            refId        = "A"
+          },
+          {
+            expr         = "mtxrHlProcessorTemperature{job=\"integrations/snmp-mikrotik\"} / 10"
+            legendFormat = "CPU"
+            refId        = "B"
+          },
+        ]
+      },
     ]
   })
 }
