@@ -103,6 +103,37 @@ opentofu/
 
 ---
 
+## Dashboard Update Workflow
+
+The Grafana provider's `grafana_dashboard` resource uses a `DiffSuppressFunc` on `config_json` that normalizes dashboard JSON before comparing. This can suppress legitimate diffs — particularly deep nested changes like Canvas panel background images.
+
+When `tofu plan` shows "No changes" but the `.tofu` file clearly differs from what's in Grafana:
+
+1. Use `curl` to update the dashboard directly via the Grafana API
+2. Run `tofu apply -refresh-only -auto-approve` to sync state
+3. Verify with `tofu plan` that state matches configuration
+
+```bash
+# Fetch, modify, and save dashboard
+curl -s -H "Authorization: Bearer $BLACKSUN_GRAFANA_SA_TOKEN" \
+  "https://separationofconcerns0dev.grafana.net/api/dashboards/uid/<UID>" \
+  | python3 modify_dashboard.py > /tmp/update.json
+
+curl -s -X POST -H "Authorization: Bearer $BLACKSUN_GRAFANA_SA_TOKEN" \
+  -H "Content-Type: application/json" -d @/tmp/update.json \
+  "https://separationofconcerns0dev.grafana.net/api/dashboards/db"
+
+# Sync state
+TF_VAR_grafana_sa_token="$BLACKSUN_GRAFANA_SA_TOKEN" \
+  tofu -chdir=opentofu/envs/prod apply -refresh-only -auto-approve
+```
+
+Dashboard UID: `4a378615-30d4-4624-95f4-d74e61ea61fc`
+
+For normal changes (adding panels, modifying queries, thresholds), `tofu plan` and `tofu apply` work correctly. The API workaround is only needed for deeply nested JSON changes that the provider's diff suppression misses.
+
+---
+
 ## Validation
 
 Before committing changes:
