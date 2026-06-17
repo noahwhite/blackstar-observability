@@ -931,7 +931,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 81
         type       = "canvas"
         title      = "SG2210P Port Map"
-        gridPos    = { h = 7, w = 20, x = 4, y = 97 }
+        gridPos    = { h = 7, w = 16, x = 4, y = 97 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -964,16 +964,16 @@ resource "grafana_dashboard" "node_health" {
                 placement  = { top = 0, left = 0, width = 755, height = 180 }
                 constraint = { horizontal = "left", vertical = "top" }
               },
-              { type = "rectangle", name = "port-8", background = { color = { field = "gigabitEthernet 1/0/8", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 125, width = 50, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-7", background = { color = { field = "gigabitEthernet 1/0/7", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 182, width = 47, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-6", background = { color = { field = "gigabitEthernet 1/0/6", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 234, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-5", background = { color = { field = "gigabitEthernet 1/0/5", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 284, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-4", background = { color = { field = "gigabitEthernet 1/0/4", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 339, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-3", background = { color = { field = "gigabitEthernet 1/0/3", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 389, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-2", background = { color = { field = "gigabitEthernet 1/0/2", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 439, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-1", background = { color = { field = "gigabitEthernet 1/0/1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 494, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-9", background = { color = { field = "gigabitEthernet 1/0/9", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 92, left = 559, width = 55, height = 33 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-10", background = { color = { field = "gigabitEthernet 1/0/10", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 92, left = 634, width = 55, height = 33 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-8", background = { color = { field = "gigabitEthernet 1/0/8", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 131, width = 38, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-7", background = { color = { field = "gigabitEthernet 1/0/7", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 188, width = 35, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-6", background = { color = { field = "gigabitEthernet 1/0/6", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 240, width = 33, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-5", background = { color = { field = "gigabitEthernet 1/0/5", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 290, width = 33, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-4", background = { color = { field = "gigabitEthernet 1/0/4", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 345, width = 33, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-3", background = { color = { field = "gigabitEthernet 1/0/3", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 395, width = 33, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-2", background = { color = { field = "gigabitEthernet 1/0/2", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 445, width = 33, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-1", background = { color = { field = "gigabitEthernet 1/0/1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 93, left = 500, width = 33, height = 26 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-9", background = { color = { field = "gigabitEthernet 1/0/9", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 566, width = 41, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-10", background = { color = { field = "gigabitEthernet 1/0/10", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 641, width = 41, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
             ]
           }
         }
