@@ -904,7 +904,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 80
         type       = "stat"
         title      = "TOR Uptime"
-        gridPos    = { h = 4, w = 6, x = 0, y = 97 }
+        gridPos    = { h = 7, w = 4, x = 0, y = 97 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -929,23 +929,54 @@ resource "grafana_dashboard" "node_health" {
       },
       {
         id         = 81
-        type       = "stat"
-        title      = "TOR Port Status"
-        gridPos    = { h = 4, w = 18, x = 6, y = 97 }
+        type       = "canvas"
+        title      = "SG2210P Port Map"
+        gridPos    = { h = 7, w = 20, x = 4, y = 97 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
-            mappings = [
-              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
-            ]
+            color = { mode = "thresholds" }
             thresholds = {
-              mode  = "absolute"
-              steps = [{ color = "text", value = null }]
+              mode = "absolute"
+              steps = [
+                { color = "#444", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
             }
           }
           overrides = []
         }
-        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
+        options = {
+          inlineEditing = false
+          panZoom       = false
+          root = {
+            type = "frame"
+            name = "root"
+            elements = [
+              {
+                type = "rectangle"
+                name = "switch-bg"
+                background = {
+                  image = { mode = "fixed", fixed = "https://raw.githubusercontent.com/noahwhite/blackstar-observability/feature/sg2210p-dashboard/assets/sg2210p-rear.png" }
+                  size  = "fill"
+                }
+                placement  = { top = 0, left = 0, width = 755, height = 180 }
+                constraint = { horizontal = "left", vertical = "top" }
+              },
+              { type = "rectangle", name = "port-8", background = { color = { field = "gigabitEthernet 1/0/8", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 125, width = 50, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-7", background = { color = { field = "gigabitEthernet 1/0/7", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 182, width = 47, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-6", background = { color = { field = "gigabitEthernet 1/0/6", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 234, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-5", background = { color = { field = "gigabitEthernet 1/0/5", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 284, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-4", background = { color = { field = "gigabitEthernet 1/0/4", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 339, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-3", background = { color = { field = "gigabitEthernet 1/0/3", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 389, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-2", background = { color = { field = "gigabitEthernet 1/0/2", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 439, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-1", background = { color = { field = "gigabitEthernet 1/0/1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 87, left = 494, width = 45, height = 38 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-9", background = { color = { field = "gigabitEthernet 1/0/9", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 92, left = 559, width = 55, height = 33 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-10", background = { color = { field = "gigabitEthernet 1/0/10", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 92, left = 634, width = 55, height = 33 }, constraint = { horizontal = "left", vertical = "top" } },
+            ]
+          }
+        }
         targets = [{
           expr         = "ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}"
           legendFormat = "{{ ifDescr }}"
@@ -957,7 +988,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 82
         type       = "timeseries"
         title      = "TOR Port Traffic"
-        gridPos    = { h = 8, w = 24, x = 0, y = 101 }
+        gridPos    = { h = 8, w = 24, x = 0, y = 104 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
