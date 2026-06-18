@@ -823,7 +823,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 83
         type       = "canvas"
         title      = "CRS305 Port Map"
-        gridPos    = { h = 5, w = 16, x = 4, y = 88 }
+        gridPos    = { h = 5, w = 13, x = 5, y = 88 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
