@@ -853,7 +853,7 @@ resource "grafana_dashboard" "node_health" {
                   image = { mode = "fixed", fixed = "https://raw.githubusercontent.com/noahwhite/blackstar-observability/feature/sg2210p-dashboard/assets/crs305-front.png" }
                   size  = "fill"
                 }
-                placement  = { top = 0, left = 0, width = 675, height = 170 }
+                placement  = { top = 0, left = 0, width = 675, height = 325 }
                 constraint = { horizontal = "left", vertical = "top" }
               },
               { type = "rectangle", name = "port-eth", background = { color = { field = "ether1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 50, left = 49, width = 48, height = 29 }, constraint = { horizontal = "left", vertical = "top" } },
