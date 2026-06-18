@@ -891,7 +891,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 75
         type       = "timeseries"
         title      = "Switch Temperature History"
-        gridPos    = { h = 8, w = 6, x = 12, y = 93 }
+        gridPos    = { h = 8, w = 12, x = 12, y = 93 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -917,7 +917,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 76
         type       = "gauge"
         title      = "Switch Disk"
-        gridPos    = { h = 8, w = 6, x = 18, y = 93 }
+        gridPos    = { h = 5, w = 5, x = 0, y = 88 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
