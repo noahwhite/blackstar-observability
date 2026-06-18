@@ -27,23 +27,23 @@ resource "grafana_dashboard" "node_health" {
         },
         {
           type       = "query"
-          name       = "switch_job"
-          label      = "Switch"
+          name       = "crs305_port"
+          label      = "CRS305 Port"
           datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
-          query      = "label_values(ifOperStatus{job=~\"integrations/snmp/.*\"}, job)"
-          refresh    = 2
+          query      = "label_values(ifOperStatus{job=\"integrations/snmp/crs305\"}, ifDescr)"
+          refresh    = 1
           sort       = 1
-          current    = { text = "", value = "" }
+          current    = { text = "ether1", value = "ether1" }
         },
         {
           type       = "query"
-          name       = "switch_port"
-          label      = "Port"
+          name       = "sg2210p_port"
+          label      = "SG2210P Port"
           datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
-          query      = "label_values(ifOperStatus{job=\"$switch_job\"}, ifDescr)"
-          refresh    = 2
+          query      = "label_values(ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}, ifDescr)"
+          refresh    = 1
           sort       = 1
-          current    = { text = "", value = "" }
+          current    = { text = "gigabitEthernet 1/0/1", value = "gigabitEthernet 1/0/1" }
         },
       ]
     }
@@ -850,10 +850,6 @@ resource "grafana_dashboard" "node_health" {
         fieldConfig = {
           defaults = {
             color = { mode = "thresholds" }
-            links = [{
-              title = "Port Detail"
-              url   = "/d/$${__dashboard.uid}?var-switch_job=integrations/snmp/crs305&var-switch_port=$${__field.name}&from=$${__from}&to=$${__to}"
-            }]
             thresholds = {
               mode = "absolute"
               steps = [
@@ -969,20 +965,126 @@ resource "grafana_dashboard" "node_health" {
           instant      = true
         }]
       },
+
+      # CRS305 Port Detail (drill-down from port map clicks)
+      {
+        id         = 84
+        type       = "timeseries"
+        title      = "Port Traffic — $crs305_port"
+        gridPos    = { h = 8, w = 16, x = 0, y = 101 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults  = { unit = "bps", color = { mode = "palette-classic" } }
+          overrides = []
+        }
+        options = { tooltip = { mode = "multi" } }
+        targets = [
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}[$__rate_interval]) * 8", legendFormat = "$crs305_port Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}[$__rate_interval]) * 8", legendFormat = "$crs305_port Tx", refId = "B" },
+        ]
+      },
+      {
+        id         = 85
+        type       = "stat"
+        title      = "Port Status"
+        gridPos    = { h = 4, w = 4, x = 16, y = 101 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "red", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
+            }
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, colorMode = "background" }
+        targets = [{
+          expr         = "ifOperStatus{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}"
+          legendFormat = "Status"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 86
+        type       = "stat"
+        title      = "Link Speed"
+        gridPos    = { h = 4, w = 4, x = 20, y = 101 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit  = "Mbps"
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode  = "absolute"
+              steps = [{ color = "blue", value = null }]
+            }
+          }
+          overrides = []
+        }
+        targets = [{
+          expr         = "ifHighSpeed{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}"
+          legendFormat = "Speed"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 87
+        type       = "timeseries"
+        title      = "Port Status History"
+        gridPos    = { h = 4, w = 8, x = 16, y = 105 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "red", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
+            }
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+            min = 0
+            max = 3
+          }
+          overrides = []
+        }
+        options = { tooltip = { mode = "single" } }
+        targets = [{
+          expr         = "ifOperStatus{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}"
+          legendFormat = "Status"
+          refId        = "A"
+        }]
+      },
+
       # =================================================================
       # Top-of-Rack Switch (TP-Link SG2210P)
       # =================================================================
       {
         type      = "row"
         title     = "Top-of-Rack Switch (SG2210P)"
-        gridPos   = { h = 1, w = 24, x = 0, y = 101 }
+        gridPos   = { h = 1, w = 24, x = 0, y = 110 }
         collapsed = false
       },
       {
         id         = 80
         type       = "stat"
         title      = "TOR Uptime"
-        gridPos    = { h = 7, w = 4, x = 0, y = 102 }
+        gridPos    = { h = 7, w = 4, x = 0, y = 111 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -1009,15 +1111,11 @@ resource "grafana_dashboard" "node_health" {
         id         = 81
         type       = "canvas"
         title      = "SG2210P Port Map"
-        gridPos    = { h = 7, w = 16, x = 4, y = 102 }
+        gridPos    = { h = 7, w = 16, x = 4, y = 111 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
             color = { mode = "thresholds" }
-            links = [{
-              title = "Port Detail"
-              url   = "/d/$${__dashboard.uid}?var-switch_job=integrations/snmp/sg2210p&var-switch_port=$${__field.name}&from=$${__from}&to=$${__to}"
-            }]
             thresholds = {
               mode = "absolute"
               steps = [
@@ -1070,7 +1168,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 82
         type       = "timeseries"
         title      = "TOR Port Traffic"
-        gridPos    = { h = 8, w = 24, x = 0, y = 109 }
+        gridPos    = { h = 8, w = 24, x = 0, y = 118 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
@@ -1082,112 +1180,107 @@ resource "grafana_dashboard" "node_health" {
           { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
         ]
       },
-      # =================================================================
-      # Port Detail (drill-down from port map clicks)
-      # =================================================================
+
+      # SG2210P Port Detail (drill-down from port map clicks)
       {
-        type      = "row"
-        title     = "Port Detail — $switch_port"
-        gridPos   = { h = 1, w = 24, x = 0, y = 117 }
-        collapsed = false
-      },
-      {
-        id         = 84
+        id         = 90
         type       = "timeseries"
-        title      = "Port Traffic — $switch_port"
-        gridPos    = { h = 8, w = 16, x = 0, y = 118 }
+        title      = "Port Traffic — $sg2210p_port"
+        gridPos    = { h = 8, w = 16, x = 0, y = 126 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
-          defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
-          overrides = [{ matcher = { id = "byRegexp", options = ".*Tx.*" }, properties = [{ id = "custom.transform", value = "negative-Y" }] }]
+          defaults  = { unit = "bps", color = { mode = "palette-classic" } }
+          overrides = []
         }
-        options = { tooltip = { mode = "multi", sort = "desc" }, legend = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull", "max", "mean"] } }
+        options = { tooltip = { mode = "multi" } }
         targets = [
-          { expr = "rate(ifHCInOctets{job=\"$switch_job\",ifDescr=\"$switch_port\"}[$__rate_interval]) * 8", legendFormat = "$switch_port Rx", refId = "A" },
-          { expr = "rate(ifHCOutOctets{job=\"$switch_job\",ifDescr=\"$switch_port\"}[$__rate_interval]) * 8", legendFormat = "$switch_port Tx", refId = "B" },
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}[$__rate_interval]) * 8", legendFormat = "$sg2210p_port Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}[$__rate_interval]) * 8", legendFormat = "$sg2210p_port Tx", refId = "B" },
         ]
       },
       {
-        id         = 85
+        id         = 91
         type       = "stat"
-        title      = "Status"
-        gridPos    = { h = 4, w = 4, x = 16, y = 118 }
+        title      = "Port Status"
+        gridPos    = { h = 4, w = 4, x = 16, y = 126 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "red", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
+            }
             mappings = [
               { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
             ]
-            thresholds = {
-              mode  = "absolute"
-              steps = [{ color = "text", value = null }]
-            }
           }
           overrides = []
         }
-        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, colorMode = "background" }
         targets = [{
-          expr         = "ifOperStatus{job=\"$switch_job\",ifDescr=\"$switch_port\"}"
+          expr         = "ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}"
           legendFormat = "Status"
           refId        = "A"
           instant      = true
         }]
       },
       {
-        id         = 86
+        id         = 92
         type       = "stat"
         title      = "Link Speed"
-        gridPos    = { h = 4, w = 4, x = 20, y = 118 }
+        gridPos    = { h = 4, w = 4, x = 20, y = 126 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
-            unit = "Mbps"
+            unit  = "Mbps"
+            color = { mode = "thresholds" }
             thresholds = {
-              mode = "absolute"
-              steps = [
-                { color = "blue", value = null },
-                { color = "green", value = 1000 },
-                { color = "purple", value = 10000 },
-              ]
+              mode  = "absolute"
+              steps = [{ color = "blue", value = null }]
             }
           }
           overrides = []
         }
-        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
         targets = [{
-          expr         = "ifHighSpeed{job=\"$switch_job\",ifDescr=\"$switch_port\"}"
+          expr         = "ifHighSpeed{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}"
           legendFormat = "Speed"
           refId        = "A"
           instant      = true
         }]
       },
       {
-        id         = 87
+        id         = 93
         type       = "timeseries"
         title      = "Port Status History"
-        gridPos    = { h = 4, w = 8, x = 16, y = 122 }
+        gridPos    = { h = 4, w = 8, x = 16, y = 130 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
-            mappings = [
-              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
-            ]
-            min    = 0
-            max    = 3
-            custom = { drawStyle = "line", fillOpacity = 20, lineWidth = 2 }
+            color = { mode = "thresholds" }
             thresholds = {
               mode = "absolute"
               steps = [
-                { color = "green", value = null },
+                { color = "red", value = null },
+                { color = "green", value = 1 },
                 { color = "red", value = 2 },
               ]
             }
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+            min = 0
+            max = 3
           }
           overrides = []
         }
-        options = { tooltip = { mode = "single" }, legend = { displayMode = "hidden" } }
+        options = { tooltip = { mode = "single" } }
         targets = [{
-          expr         = "ifOperStatus{job=\"$switch_job\",ifDescr=\"$switch_port\"}"
+          expr         = "ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}"
           legendFormat = "Status"
           refId        = "A"
         }]
