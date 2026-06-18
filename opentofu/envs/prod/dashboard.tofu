@@ -853,14 +853,14 @@ resource "grafana_dashboard" "node_health" {
                   image = { mode = "fixed", fixed = "https://raw.githubusercontent.com/noahwhite/blackstar-observability/feature/sg2210p-dashboard/assets/crs305-front.png" }
                   size  = "fill"
                 }
-                placement  = { top = 0, left = 0, width = 675, height = 325 }
+                placement  = { top = 0, left = 0, width = 675, height = 145 }
                 constraint = { horizontal = "left", vertical = "top" }
               },
-              { type = "rectangle", name = "port-eth", background = { color = { field = "ether1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 50, left = 49, width = 48, height = 29 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp1", background = { color = { field = "sfp-sfpplus1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 70, left = 166, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp2", background = { color = { field = "sfp-sfpplus2", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 70, left = 286, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp3", background = { color = { field = "sfp-sfpplus3", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 70, left = 406, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp4", background = { color = { field = "sfp-sfpplus4", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 70, left = 526, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-eth", background = { color = { field = "ether1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 49, left = 62, width = 48, height = 29 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-sfp1", background = { color = { field = "sfp-sfpplus1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 179, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-sfp2", background = { color = { field = "sfp-sfpplus2", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 298, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-sfp3", background = { color = { field = "sfp-sfpplus3", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 418, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
+              { type = "rectangle", name = "port-sfp4", background = { color = { field = "sfp-sfpplus4", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 538, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
             ]
           }
         }
