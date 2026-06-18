@@ -12,18 +12,40 @@ resource "grafana_dashboard" "node_health" {
     }
 
     templating = {
-      list = [{
-        type       = "query"
-        name       = "instance"
-        label      = "Node"
-        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
-        query      = "label_values(up{job=\"integrations/unix\"}, instance)"
-        refresh    = 2
-        sort       = 1
-        includeAll = true
-        multi      = true
-        current    = { text = "All", value = "$__all" }
-      }]
+      list = [
+        {
+          type       = "query"
+          name       = "instance"
+          label      = "Node"
+          datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+          query      = "label_values(up{job=\"integrations/unix\"}, instance)"
+          refresh    = 2
+          sort       = 1
+          includeAll = true
+          multi      = true
+          current    = { text = "All", value = "$__all" }
+        },
+        {
+          type       = "query"
+          name       = "crs305_port"
+          label      = "CRS305 Port"
+          datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+          query      = "label_values(ifOperStatus{job=\"integrations/snmp/crs305\"}, ifDescr)"
+          refresh    = 1
+          sort       = 1
+          current    = { text = "ether1", value = "ether1" }
+        },
+        {
+          type       = "query"
+          name       = "sg2210p_port"
+          label      = "SG2210P Port"
+          datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+          query      = "label_values(ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}, ifDescr)"
+          refresh    = 1
+          sort       = 1
+          current    = { text = "gigabitEthernet 1/0/1", value = "gigabitEthernet 1/0/1" }
+        },
+      ]
     }
 
     panels = [
@@ -821,48 +843,127 @@ resource "grafana_dashboard" "node_health" {
       },
       {
         id         = 83
-        type       = "canvas"
+        type       = "gapit-htmlgraphics-panel"
         title      = "CRS305 Port Map"
         gridPos    = { h = 5, w = 13, x = 5, y = 88 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
-          defaults = {
-            color = { mode = "thresholds" }
-            thresholds = {
-              mode = "absolute"
-              steps = [
-                { color = "#444", value = null },
-                { color = "green", value = 1 },
-                { color = "red", value = 2 },
-              ]
-            }
-          }
+          defaults  = {}
           overrides = []
         }
         options = {
-          inlineEditing = false
-          panZoom       = false
-          root = {
-            type = "frame"
-            name = "root"
-            elements = [
-              {
-                type = "rectangle"
-                name = "switch-bg"
-                background = {
-                  image = { mode = "fixed", fixed = "https://raw.githubusercontent.com/noahwhite/blackstar-observability/1d1249da004502b00b424ef61d0c4c9357073d0f/assets/crs305-front.png" }
-                  size  = "fill"
-                }
-                placement  = { top = 0, left = 0, width = 675, height = 145 }
-                constraint = { horizontal = "left", vertical = "top" }
-              },
-              { type = "rectangle", name = "port-eth", background = { color = { field = "ether1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 49, left = 62, width = 48, height = 29 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp1", background = { color = { field = "sfp-sfpplus1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 179, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp2", background = { color = { field = "sfp-sfpplus2", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 298, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp3", background = { color = { field = "sfp-sfpplus3", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 418, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-sfp4", background = { color = { field = "sfp-sfpplus4", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 71, left = 538, width = 46, height = 23 }, constraint = { horizontal = "left", vertical = "top" } },
-            ]
+          add100Percentage          = true
+          centerAlignContent        = true
+          SVGBaseFix                = true
+          renderOnMount             = true
+          dynamicData               = true
+          dynamicFieldDisplayValues = false
+          dynamicHtmlGraphics       = false
+          dynamicProps              = false
+          panelupdateOnMount        = true
+          overflow                  = "hidden"
+
+          css = <<-EOT
+          .switch-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
           }
+          .switch-container {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
+            width: 100%;
+          }
+          .switch-bg {
+            display: block;
+            width: 100%;
+            height: 100%;
+          }
+          .port-overlay {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s ease;
+            opacity: 0.5;
+            background-color: #444;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+          }
+          .port-overlay:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 8px rgba(255,255,255,0.6);
+          }
+          .port-overlay.selected {
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.7);
+            opacity: 0.9;
+          }
+          EOT
+
+          html = <<-EOT
+          <div class="switch-wrapper">
+            <div class="switch-container" style="aspect-ratio:675/145">
+              <img src="https://raw.githubusercontent.com/noahwhite/blackstar-observability/1d1249da004502b00b424ef61d0c4c9357073d0f/assets/crs305-front.png" class="switch-bg" />
+              <div class="port-overlay" data-port="ether1" title="ether1" style="left:9.19%;top:39.31%;width:7.11%;height:20.00%"></div>
+              <div class="port-overlay" data-port="sfp-sfpplus1" title="sfp-sfpplus1" style="left:26.52%;top:48.97%;width:6.81%;height:15.86%"></div>
+              <div class="port-overlay" data-port="sfp-sfpplus2" title="sfp-sfpplus2" style="left:44.15%;top:48.97%;width:6.81%;height:15.86%"></div>
+              <div class="port-overlay" data-port="sfp-sfpplus3" title="sfp-sfpplus3" style="left:61.93%;top:48.97%;width:6.81%;height:15.86%"></div>
+              <div class="port-overlay" data-port="sfp-sfpplus4" title="sfp-sfpplus4" style="left:79.70%;top:48.97%;width:6.81%;height:15.86%"></div>
+            </div>
+          </div>
+          EOT
+
+          onInit = <<-EOT
+          htmlNode.querySelectorAll('.port-overlay').forEach(function(el) {
+            el.addEventListener('click', function() {
+              var update = {};
+              update['var-crs305_port'] = el.dataset.port;
+              htmlGraphics.locationService.partial(update, true);
+              htmlNode.querySelectorAll('.port-overlay').forEach(function(o) {
+                o.classList.toggle('selected', o.dataset.port === el.dataset.port);
+              });
+            });
+          });
+          EOT
+
+          onRender = <<-EOT
+          var statusMap = {};
+          if (data && data.series) {
+            data.series.forEach(function(s) {
+              s.fields.forEach(function(f) {
+                if (f.type !== 'number' || !f.values || f.values.length === 0) return;
+                var val = Number(f.values[f.values.length - 1]);
+                var name = null;
+                if (f.labels && f.labels.ifDescr) name = f.labels.ifDescr;
+                if (!name && f.config && f.config.displayNameFromDS) name = f.config.displayNameFromDS;
+                if (!name && f.name && f.name !== 'Value' && f.name !== 'Time') name = f.name;
+                if (!name && s.name) name = s.name;
+                if (name) statusMap[name] = val;
+              });
+            });
+          }
+          var params = new URLSearchParams(window.location.search);
+          var selected = params.get('var-crs305_port');
+          htmlNode.querySelectorAll('.port-overlay').forEach(function(el) {
+            var port = el.dataset.port;
+            var status = statusMap[port];
+            if (status === 1) {
+              el.style.backgroundColor = 'rgba(115, 191, 105, 0.8)';
+              el.style.opacity = '0.8';
+            } else if (status === 2) {
+              el.style.backgroundColor = 'rgba(242, 73, 92, 0.8)';
+              el.style.opacity = '0.8';
+            } else {
+              el.style.backgroundColor = 'rgba(100, 100, 100, 0.6)';
+              el.style.opacity = '0.6';
+            }
+            el.classList.toggle('selected', port === selected);
+          });
+          EOT
         }
         targets = [{
           expr         = "ifOperStatus{job=\"integrations/snmp/crs305\"}"
@@ -943,20 +1044,126 @@ resource "grafana_dashboard" "node_health" {
           instant      = true
         }]
       },
+
+      # CRS305 Port Detail (drill-down from port map clicks)
+      {
+        id         = 84
+        type       = "timeseries"
+        title      = "Port Traffic — $crs305_port"
+        gridPos    = { h = 8, w = 16, x = 0, y = 101 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults  = { unit = "bps", color = { mode = "palette-classic" } }
+          overrides = []
+        }
+        options = { tooltip = { mode = "multi" } }
+        targets = [
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}[$__rate_interval]) * 8", legendFormat = "$crs305_port Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}[$__rate_interval]) * 8", legendFormat = "$crs305_port Tx", refId = "B" },
+        ]
+      },
+      {
+        id         = 85
+        type       = "stat"
+        title      = "Port Status"
+        gridPos    = { h = 4, w = 4, x = 16, y = 101 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "red", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
+            }
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, colorMode = "background" }
+        targets = [{
+          expr         = "ifOperStatus{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}"
+          legendFormat = "Status"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 86
+        type       = "stat"
+        title      = "Link Speed"
+        gridPos    = { h = 4, w = 4, x = 20, y = 101 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit  = "Mbps"
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode  = "absolute"
+              steps = [{ color = "blue", value = null }]
+            }
+          }
+          overrides = []
+        }
+        targets = [{
+          expr         = "ifHighSpeed{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}"
+          legendFormat = "Speed"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 87
+        type       = "timeseries"
+        title      = "Port Status History"
+        gridPos    = { h = 4, w = 8, x = 16, y = 105 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "red", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
+            }
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+            min = 0
+            max = 3
+          }
+          overrides = []
+        }
+        options = { tooltip = { mode = "single" } }
+        targets = [{
+          expr         = "ifOperStatus{job=\"integrations/snmp/crs305\",ifDescr=\"$crs305_port\"}"
+          legendFormat = "Status"
+          refId        = "A"
+        }]
+      },
+
       # =================================================================
       # Top-of-Rack Switch (TP-Link SG2210P)
       # =================================================================
       {
         type      = "row"
         title     = "Top-of-Rack Switch (SG2210P)"
-        gridPos   = { h = 1, w = 24, x = 0, y = 101 }
+        gridPos   = { h = 1, w = 24, x = 0, y = 110 }
         collapsed = false
       },
       {
         id         = 80
         type       = "stat"
         title      = "TOR Uptime"
-        gridPos    = { h = 7, w = 4, x = 0, y = 102 }
+        gridPos    = { h = 7, w = 4, x = 0, y = 111 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -981,53 +1188,132 @@ resource "grafana_dashboard" "node_health" {
       },
       {
         id         = 81
-        type       = "canvas"
+        type       = "gapit-htmlgraphics-panel"
         title      = "SG2210P Port Map"
-        gridPos    = { h = 7, w = 16, x = 4, y = 102 }
+        gridPos    = { h = 7, w = 16, x = 4, y = 111 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
-          defaults = {
-            color = { mode = "thresholds" }
-            thresholds = {
-              mode = "absolute"
-              steps = [
-                { color = "#444", value = null },
-                { color = "green", value = 1 },
-                { color = "red", value = 2 },
-              ]
-            }
-          }
+          defaults  = {}
           overrides = []
         }
         options = {
-          inlineEditing = false
-          panZoom       = false
-          root = {
-            type = "frame"
-            name = "root"
-            elements = [
-              {
-                type = "rectangle"
-                name = "switch-bg"
-                background = {
-                  image = { mode = "fixed", fixed = "https://raw.githubusercontent.com/noahwhite/blackstar-observability/feature/sg2210p-dashboard/assets/sg2210p-rear.png" }
-                  size  = "fill"
-                }
-                placement  = { top = 0, left = 0, width = 755, height = 180 }
-                constraint = { horizontal = "left", vertical = "top" }
-              },
-              { type = "rectangle", name = "port-8", background = { color = { field = "gigabitEthernet 1/0/8", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 142, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-7", background = { color = { field = "gigabitEthernet 1/0/7", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 194, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-6", background = { color = { field = "gigabitEthernet 1/0/6", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 246, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-5", background = { color = { field = "gigabitEthernet 1/0/5", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 296, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-4", background = { color = { field = "gigabitEthernet 1/0/4", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 348, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-3", background = { color = { field = "gigabitEthernet 1/0/3", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 400, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-2", background = { color = { field = "gigabitEthernet 1/0/2", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 450, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-1", background = { color = { field = "gigabitEthernet 1/0/1", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 97, left = 502, width = 21, height = 19 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-9", background = { color = { field = "gigabitEthernet 1/0/9", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 100, left = 571, width = 25, height = 15 }, constraint = { horizontal = "left", vertical = "top" } },
-              { type = "rectangle", name = "port-10", background = { color = { field = "gigabitEthernet 1/0/10", fixed = "#333" } }, border = { color = { fixed = "transparent" }, width = 0 }, placement = { top = 100, left = 648, width = 24, height = 15 }, constraint = { horizontal = "left", vertical = "top" } },
-            ]
+          add100Percentage          = true
+          centerAlignContent        = true
+          SVGBaseFix                = true
+          renderOnMount             = true
+          dynamicData               = true
+          dynamicFieldDisplayValues = false
+          dynamicHtmlGraphics       = false
+          dynamicProps              = false
+          panelupdateOnMount        = true
+          overflow                  = "hidden"
+
+          css = <<-EOT
+          .switch-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
           }
+          .switch-container {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
+            width: 100%;
+          }
+          .switch-bg {
+            display: block;
+            width: 100%;
+            height: 100%;
+          }
+          .port-overlay {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s ease;
+            opacity: 0.5;
+            background-color: #444;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+          }
+          .port-overlay:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 8px rgba(255,255,255,0.6);
+          }
+          .port-overlay.selected {
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.7);
+            opacity: 0.9;
+          }
+          EOT
+
+          html = <<-EOT
+          <div class="switch-wrapper">
+            <div class="switch-container" style="aspect-ratio:755/180">
+              <img src="https://raw.githubusercontent.com/noahwhite/blackstar-observability/feature/sg2210p-dashboard/assets/sg2210p-rear.png" class="switch-bg" />
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/8" title="gigabitEthernet 1/0/8" style="left:18.81%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/7" title="gigabitEthernet 1/0/7" style="left:25.70%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/6" title="gigabitEthernet 1/0/6" style="left:32.58%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/5" title="gigabitEthernet 1/0/5" style="left:39.21%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/4" title="gigabitEthernet 1/0/4" style="left:46.09%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/3" title="gigabitEthernet 1/0/3" style="left:52.98%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/2" title="gigabitEthernet 1/0/2" style="left:59.60%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/1" title="gigabitEthernet 1/0/1" style="left:66.49%;top:53.89%;width:2.78%;height:10.56%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/9" title="gigabitEthernet 1/0/9" style="left:75.63%;top:55.56%;width:3.31%;height:8.33%"></div>
+              <div class="port-overlay" data-port="gigabitEthernet 1/0/10" title="gigabitEthernet 1/0/10" style="left:85.83%;top:55.56%;width:3.18%;height:8.33%"></div>
+            </div>
+          </div>
+          EOT
+
+          onInit = <<-EOT
+          htmlNode.querySelectorAll('.port-overlay').forEach(function(el) {
+            el.addEventListener('click', function() {
+              var update = {};
+              update['var-sg2210p_port'] = el.dataset.port;
+              htmlGraphics.locationService.partial(update, true);
+              htmlNode.querySelectorAll('.port-overlay').forEach(function(o) {
+                o.classList.toggle('selected', o.dataset.port === el.dataset.port);
+              });
+            });
+          });
+          EOT
+
+          onRender = <<-EOT
+          var statusMap = {};
+          if (data && data.series) {
+            data.series.forEach(function(s) {
+              s.fields.forEach(function(f) {
+                if (f.type !== 'number' || !f.values || f.values.length === 0) return;
+                var val = Number(f.values[f.values.length - 1]);
+                var name = null;
+                if (f.labels && f.labels.ifDescr) name = f.labels.ifDescr;
+                if (!name && f.config && f.config.displayNameFromDS) name = f.config.displayNameFromDS;
+                if (!name && f.name && f.name !== 'Value' && f.name !== 'Time') name = f.name;
+                if (!name && s.name) name = s.name;
+                if (name) statusMap[name] = val;
+              });
+            });
+          }
+          var params = new URLSearchParams(window.location.search);
+          var selected = params.get('var-sg2210p_port');
+          htmlNode.querySelectorAll('.port-overlay').forEach(function(el) {
+            var port = el.dataset.port;
+            var status = statusMap[port];
+            if (status === 1) {
+              el.style.backgroundColor = 'rgba(115, 191, 105, 0.8)';
+              el.style.opacity = '0.8';
+            } else if (status === 2) {
+              el.style.backgroundColor = 'rgba(242, 73, 92, 0.8)';
+              el.style.opacity = '0.8';
+            } else {
+              el.style.backgroundColor = 'rgba(100, 100, 100, 0.6)';
+              el.style.opacity = '0.6';
+            }
+            el.classList.toggle('selected', port === selected);
+          });
+          EOT
         }
         targets = [{
           expr         = "ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}"
@@ -1040,7 +1326,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 82
         type       = "timeseries"
         title      = "TOR Port Traffic"
-        gridPos    = { h = 8, w = 24, x = 0, y = 109 }
+        gridPos    = { h = 8, w = 24, x = 0, y = 118 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
@@ -1051,6 +1337,111 @@ resource "grafana_dashboard" "node_health" {
           { expr = "rate(ifHCInOctets{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Rx", refId = "A" },
           { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/sg2210p\",ifDescr=~\"gigabitEthernet.*\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
         ]
+      },
+
+      # SG2210P Port Detail (drill-down from port map clicks)
+      {
+        id         = 90
+        type       = "timeseries"
+        title      = "Port Traffic — $sg2210p_port"
+        gridPos    = { h = 8, w = 16, x = 0, y = 126 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults  = { unit = "bps", color = { mode = "palette-classic" } }
+          overrides = []
+        }
+        options = { tooltip = { mode = "multi" } }
+        targets = [
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}[$__rate_interval]) * 8", legendFormat = "$sg2210p_port Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}[$__rate_interval]) * 8", legendFormat = "$sg2210p_port Tx", refId = "B" },
+        ]
+      },
+      {
+        id         = 91
+        type       = "stat"
+        title      = "Port Status"
+        gridPos    = { h = 4, w = 4, x = 16, y = 126 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "red", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
+            }
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, colorMode = "background" }
+        targets = [{
+          expr         = "ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}"
+          legendFormat = "Status"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 92
+        type       = "stat"
+        title      = "Link Speed"
+        gridPos    = { h = 4, w = 4, x = 20, y = 126 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit  = "Mbps"
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode  = "absolute"
+              steps = [{ color = "blue", value = null }]
+            }
+          }
+          overrides = []
+        }
+        targets = [{
+          expr         = "ifHighSpeed{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}"
+          legendFormat = "Speed"
+          refId        = "A"
+          instant      = true
+        }]
+      },
+      {
+        id         = 93
+        type       = "timeseries"
+        title      = "Port Status History"
+        gridPos    = { h = 4, w = 8, x = 16, y = 130 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            color = { mode = "thresholds" }
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "red", value = null },
+                { color = "green", value = 1 },
+                { color = "red", value = 2 },
+              ]
+            }
+            mappings = [
+              { type = "value", options = { "1" = { text = "Up", color = "green" }, "2" = { text = "Down", color = "red" } } },
+            ]
+            min = 0
+            max = 3
+          }
+          overrides = []
+        }
+        options = { tooltip = { mode = "single" } }
+        targets = [{
+          expr         = "ifOperStatus{job=\"integrations/snmp/sg2210p\",ifDescr=\"$sg2210p_port\"}"
+          legendFormat = "Status"
+          refId        = "A"
+        }]
       },
     ]
   })
