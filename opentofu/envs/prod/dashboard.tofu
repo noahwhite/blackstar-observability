@@ -823,7 +823,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 83
         type       = "canvas"
         title      = "CRS305 Port Map"
-        gridPos    = { h = 7, w = 16, x = 4, y = 88 }
+        gridPos    = { h = 5, w = 16, x = 4, y = 88 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -850,7 +850,7 @@ resource "grafana_dashboard" "node_health" {
                 type = "rectangle"
                 name = "switch-bg"
                 background = {
-                  image = { mode = "fixed", fixed = "https://raw.githubusercontent.com/noahwhite/blackstar-observability/feature/sg2210p-dashboard/assets/crs305-front.png" }
+                  image = { mode = "fixed", fixed = "https://raw.githubusercontent.com/noahwhite/blackstar-observability/1d1249da004502b00b424ef61d0c4c9357073d0f/assets/crs305-front.png" }
                   size  = "fill"
                 }
                 placement  = { top = 0, left = 0, width = 675, height = 145 }
@@ -875,7 +875,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 74
         type       = "timeseries"
         title      = "Switch Port Traffic"
-        gridPos    = { h = 8, w = 12, x = 0, y = 95 }
+        gridPos    = { h = 8, w = 12, x = 0, y = 93 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
@@ -891,7 +891,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 75
         type       = "timeseries"
         title      = "Switch Temperature History"
-        gridPos    = { h = 8, w = 6, x = 12, y = 95 }
+        gridPos    = { h = 8, w = 6, x = 12, y = 93 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -917,7 +917,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 76
         type       = "gauge"
         title      = "Switch Disk"
-        gridPos    = { h = 8, w = 6, x = 18, y = 95 }
+        gridPos    = { h = 8, w = 6, x = 18, y = 93 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -949,14 +949,14 @@ resource "grafana_dashboard" "node_health" {
       {
         type      = "row"
         title     = "Top-of-Rack Switch (SG2210P)"
-        gridPos   = { h = 1, w = 24, x = 0, y = 103 }
+        gridPos   = { h = 1, w = 24, x = 0, y = 101 }
         collapsed = false
       },
       {
         id         = 80
         type       = "stat"
         title      = "TOR Uptime"
-        gridPos    = { h = 7, w = 4, x = 0, y = 104 }
+        gridPos    = { h = 7, w = 4, x = 0, y = 102 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -983,7 +983,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 81
         type       = "canvas"
         title      = "SG2210P Port Map"
-        gridPos    = { h = 7, w = 16, x = 4, y = 104 }
+        gridPos    = { h = 7, w = 16, x = 4, y = 102 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults = {
@@ -1040,7 +1040,7 @@ resource "grafana_dashboard" "node_health" {
         id         = 82
         type       = "timeseries"
         title      = "TOR Port Traffic"
-        gridPos    = { h = 8, w = 24, x = 0, y = 111 }
+        gridPos    = { h = 8, w = 24, x = 0, y = 109 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
           defaults  = { unit = "bps", custom = { drawStyle = "line", fillOpacity = 10 } }
