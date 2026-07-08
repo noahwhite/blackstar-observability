@@ -382,4 +382,77 @@ resource "grafana_rule_group" "node_health" {
       })
     }
   }
+
+  rule {
+    name      = "Switch Temperature High"
+    condition = "C"
+    for       = "5m"
+
+    no_data_state  = "OK"
+    exec_err_state = "Error"
+
+    annotations = {
+      summary     = "Switch temperature > 60°C on {{ $labels.job }}"
+      description = "Sustained high temperature on a fanless MikroTik switch. Check rack airflow and ambient temperature."
+    }
+
+    labels = {
+      severity = "warning"
+      team     = "blackstar"
+    }
+
+    data {
+      ref_id         = "A"
+      datasource_uid = data.grafana_data_source.prometheus.uid
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      model = jsonencode({
+        datasource   = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        editorMode   = "code"
+        expr         = "max by (job) (mtxrHlSensorValue{job=~\"integrations/snmp/(crs305|css610)\"})"
+        legendFormat = "{{ job }}"
+        refId        = "A"
+      })
+    }
+
+    data {
+      ref_id         = "B"
+      datasource_uid = "__expr__"
+      relative_time_range {
+        from = 0
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "__expr__", uid = "__expr__" }
+        expression = "A"
+        reducer    = "last"
+        refId      = "B"
+        type       = "reduce"
+      })
+    }
+
+    data {
+      ref_id         = "C"
+      datasource_uid = "__expr__"
+      relative_time_range {
+        from = 0
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "__expr__", uid = "__expr__" }
+        expression = "B"
+        refId      = "C"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { params = [60], type = "gt" }
+          operator  = { type = "and" }
+          query     = { params = ["B"] }
+          reducer   = { params = [], type = "last" }
+          type      = "query"
+        }]
+      })
+    }
+  }
 }

@@ -746,12 +746,22 @@ resource "grafana_dashboard" "node_health" {
           overrides = []
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
-        targets = [{
-          expr         = "mtxrHlProcessorTemperature{job=\"integrations/snmp/crs305\"} / 10"
-          legendFormat = "CPU"
-          refId        = "A"
-          instant      = true
-        }]
+        # mtxrHlSensorValue (mtxrHlSensorTable) reports direct Celsius and is populated by
+        # both SwOS (CSS610) and RouterOS (CRS305/CRS310) — one metric, no /10 scaling.
+        targets = [
+          {
+            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/crs305\"}"
+            legendFormat = "CRS305"
+            refId        = "A"
+            instant      = true
+          },
+          {
+            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/css610\"}"
+            legendFormat = "CSS610"
+            refId        = "B"
+            instant      = true
+          },
+        ]
       },
       {
         id         = 71
@@ -1008,9 +1018,14 @@ resource "grafana_dashboard" "node_health" {
         }
         targets = [
           {
-            expr         = "mtxrHlProcessorTemperature{job=\"integrations/snmp/crs305\"} / 10"
-            legendFormat = "CPU"
+            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/crs305\"}"
+            legendFormat = "CRS305"
             refId        = "A"
+          },
+          {
+            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/css610\"}"
+            legendFormat = "CSS610"
+            refId        = "B"
           },
         ]
       },
