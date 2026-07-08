@@ -1,0 +1,78 @@
+name: Apply Grafana observability
+
+# Applies the OpenTofu in opentofu/envs/prod to Grafana Cloud on merge to main.
+# The Grafana SA token and Cloudflare R2 state-backend creds are pulled from
+# Bitwarden Secrets Manager at run time (bitwarden/sm-action, EU cloud) — the
+# only long-lived secret in GitHub is BWS_ACCESS_TOKEN.
+#
+# ┌─ DORMANT until bootstrap is complete ────────────────────────────────────┐
+# │ This job only runs when the repo variable CD_ENABLED == 'true', so this   │
+# │ workflow is safe to merge before the one-time bootstrap is done. See      │
+# │ NWSOC-23 for the checklist:                                               │
+# │   1. Create an R2 bucket for tofu state + add backend.tofu (R2) and       │
+# │      `tofu init -migrate-state` from local — CI cannot apply with the     │
+# │      current local state.                                                 │
+# │   2. Store the Grafana SA token + R2 creds + CF account id in BWS (EU);    │
+# │      replace the placeholder UUIDs in the sm-action step below.           │
+# │   3. Create a BWS machine account scoped to that project; add its access  │
+# │      token as the BWS_ACCESS_TOKEN GitHub Actions secret.                 │
+# │   4. Set repo variable CD_ENABLED=true to activate.                       │
+# └───────────────────────────────────────────────────────────────────────────┘
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "opentofu/**"
+      - ".github/workflows/apply.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tofu-apply-prod
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    # Gated off until the R2 remote-state + BWS bootstrap is complete (NWSOC-23).
+    if: vars.CD_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: opentofu/envs/prod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Retrieve secrets from Bitwarden
+        uses: bitwarden/sm-action@v2.2.0
+        with:
+          access_token: ${{ secrets.BWS_ACCESS_TOKEN }}
+          cloud_region: eu
+          # Replace these placeholder UUIDs with the real BWS secret ids (NWSOC-23).
+          secrets: |
+            00000000-0000-0000-0000-000000000000 > TF_VAR_grafana_sa_token
+            00000000-0000-0000-0000-000000000001 > R2_ACCESS_KEY_ID
+            00000000-0000-0000-0000-000000000002 > R2_SECRET_ACCESS_KEY
+            00000000-0000-0000-0000-000000000003 > CLOUDFLARE_ACCOUNT_ID
+
+      - name: Set up OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
+
+      # R2 is S3-compatible; the S3 backend reads AWS_* env vars for credentials.
+      # The bucket/key/endpoint live in backend.tofu (added at bootstrap).
+      - name: Tofu init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ env.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.R2_SECRET_ACCESS_KEY }}
+        run: tofu init -input=false
+
+      - name: Tofu apply
+        env:
+          AWS_ACCESS_KEY_ID: ${{ env.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.R2_SECRET_ACCESS_KEY }}
+        run: tofu apply -input=false -auto-approve
