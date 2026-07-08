@@ -1,6 +1,9 @@
 resource "grafana_dashboard" "node_health" {
   folder = grafana_folder.blackstar.id
   config_json = jsonencode({
+    # Pin the uid so an apply against empty/missing state updates THIS dashboard
+    # instead of minting a duplicate with a random uid (see NWSOC-22 incident).
+    uid         = "4a378615-30d4-4624-95f4-d74e61ea61fc"
     title       = "Blackstar Node Health"
     description = "Proxmox node health: temperatures, CPU, memory, disk, network, ZFS"
     editable    = true
