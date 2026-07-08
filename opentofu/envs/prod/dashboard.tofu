@@ -730,7 +730,7 @@ resource "grafana_dashboard" "node_health" {
       {
         id         = 70
         type       = "stat"
-        title      = "Switch Temperature"
+        title      = "CRS305 Temperature"
         gridPos    = { h = 4, w = 6, x = 0, y = 84 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
@@ -749,19 +749,13 @@ resource "grafana_dashboard" "node_health" {
           overrides = []
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
-        # mtxrHlSensorValue (mtxrHlSensorTable) reports direct Celsius and is populated by
-        # both SwOS (CSS610) and RouterOS (CRS305/CRS310) — one metric, no /10 scaling.
+        # mtxrHlSensorValue (mtxrHlSensorTable) reports direct Celsius (no /10). The CSS610
+        # temp has its own stat in the Management Switch section (id 94).
         targets = [
           {
             expr         = "mtxrHlSensorValue{job=\"integrations/snmp/crs305\"}"
-            legendFormat = "CRS305"
+            legendFormat = "CPU"
             refId        = "A"
-            instant      = true
-          },
-          {
-            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/css610\"}"
-            legendFormat = "CSS610"
-            refId        = "B"
             instant      = true
           },
         ]
@@ -1004,7 +998,7 @@ resource "grafana_dashboard" "node_health" {
       {
         id         = 75
         type       = "timeseries"
-        title      = "Switch Temperature History"
+        title      = "CRS305 Temperature History"
         gridPos    = { h = 8, w = 12, x = 12, y = 93 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
@@ -1022,13 +1016,8 @@ resource "grafana_dashboard" "node_health" {
         targets = [
           {
             expr         = "mtxrHlSensorValue{job=\"integrations/snmp/crs305\"}"
-            legendFormat = "CRS305"
+            legendFormat = "CPU"
             refId        = "A"
-          },
-          {
-            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/css610\"}"
-            legendFormat = "CSS610"
-            refId        = "B"
           },
         ]
       },
@@ -1339,6 +1328,37 @@ resource "grafana_dashboard" "node_health" {
           refId        = "A"
           instant      = true
         }]
+      },
+      {
+        id         = 94
+        type       = "stat"
+        title      = "CSS610 Temperature"
+        gridPos    = { h = 6, w = 4, x = 20, y = 111 }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        fieldConfig = {
+          defaults = {
+            unit = "celsius"
+            thresholds = {
+              mode = "absolute"
+              steps = [
+                { color = "green", value = null },
+                { color = "yellow", value = 50 },
+                { color = "orange", value = 60 },
+                { color = "red", value = 70 },
+              ]
+            }
+          }
+          overrides = []
+        }
+        options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
+        targets = [
+          {
+            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/css610\"}"
+            legendFormat = "CPU"
+            refId        = "A"
+            instant      = true
+          },
+        ]
       },
       {
         id         = 82
