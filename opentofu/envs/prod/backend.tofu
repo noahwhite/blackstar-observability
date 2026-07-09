@@ -19,15 +19,19 @@
 #   export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...
 #   tofu -chdir=opentofu/envs/prod init -migrate-state
 #
-# Note: R2 has no DynamoDB, so there is no lock table. OpenTofu 1.11 supports
-# S3-native locking via `use_lockfile = true` (conditional writes) — worth
-# enabling once verified against R2, to prevent concurrent CI/local applies.
+# State locking uses S3-native locking (`use_lockfile`), not DynamoDB — R2 has
+# no DynamoDB. OpenTofu writes a `<key>.tflock` object with `If-None-Match: *`,
+# so a second writer gets 412 Precondition Failed and fails to acquire the lock.
+# R2's S3 API supports these conditional headers (incl. the `*` wildcard), so
+# this works. Needed now that CI (.github/workflows/apply.yml) and local applies
+# can race. The R2 token needs Get/Put/DeleteObject on the lock key.
 terraform {
   backend "s3" {
     bucket = "blackstar-observability-tfstate-prod"
     key    = "envs/prod/terraform.tfstate"
     region = "auto"
 
+    use_lockfile                = true
     use_path_style              = true
     skip_credentials_validation = true
     skip_metadata_api_check     = true
