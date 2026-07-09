@@ -411,7 +411,7 @@ resource "grafana_rule_group" "node_health" {
       model = jsonencode({
         datasource   = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         editorMode   = "code"
-        expr         = "max by (job) (mtxrHlSensorValue{job=~\"integrations/snmp/(crs305|css610)\"})"
+        expr         = "max by (job) (mtxrHlSensorValue{job=~\"integrations/snmp/(crs305|crs310)\"})"
         legendFormat = "{{ job }}"
         refId        = "A"
       })
