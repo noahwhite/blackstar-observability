@@ -2,7 +2,7 @@ name: Apply Grafana observability
 
 # Applies the OpenTofu in opentofu/envs/prod to Grafana Cloud on merge to main.
 # The Grafana SA token and Cloudflare R2 state-backend creds are pulled from
-# Bitwarden Secrets Manager at run time (bitwarden/sm-action, EU cloud) — the
+# Bitwarden Secrets Manager at run time (bitwarden/sm-action, US cloud) — the
 # only long-lived secret in GitHub is BWS_ACCESS_TOKEN.
 #
 # ┌─ DORMANT until bootstrap is complete ────────────────────────────────────┐
@@ -50,7 +50,9 @@ jobs:
         uses: bitwarden/sm-action@v2.2.0
         with:
           access_token: ${{ secrets.BWS_ACCESS_TOKEN }}
-          cloud_region: eu
+          # Blackstar's BWS (noah@separationofconcerns.dev) is US — NOT the EU
+          # region that officina/infisical-stack use.
+          cloud_region: us
           # Replace these placeholder UUIDs with the real BWS secret ids (NWSOC-23).
           secrets: |
             00000000-0000-0000-0000-000000000000 > TF_VAR_grafana_sa_token
