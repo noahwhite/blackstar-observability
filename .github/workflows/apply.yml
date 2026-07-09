@@ -53,11 +53,13 @@ jobs:
           # Blackstar's BWS (noah@separationofconcerns.dev) is US — NOT the EU
           # region that officina/infisical-stack use.
           cloud_region: us
-          # Replace these placeholder UUIDs with the real BWS secret ids (NWSOC-23).
+          # BWS secret ids in the noah@separationofconcerns.dev vault. These are
+          # identifiers, not secrets — resolving them requires BWS_ACCESS_TOKEN.
+          # TODO(NWSOC-23): replace the two remaining placeholders.
           secrets: |
             00000000-0000-0000-0000-000000000000 > TF_VAR_grafana_sa_token
-            00000000-0000-0000-0000-000000000001 > R2_ACCESS_KEY_ID
-            00000000-0000-0000-0000-000000000002 > R2_SECRET_ACCESS_KEY
+            36a8e1ce-3785-4989-bcd1-b482001dde58 > R2_ACCESS_KEY_ID
+            b27d82c5-5bb8-49bc-83cf-b482001e36c8 > R2_SECRET_ACCESS_KEY
             00000000-0000-0000-0000-000000000003 > CLOUDFLARE_ACCOUNT_ID
 
       - name: Set up OpenTofu
@@ -65,16 +67,20 @@ jobs:
         with:
           tofu_wrapper: false
 
-      # R2 is S3-compatible; the S3 backend reads AWS_* env vars for credentials.
-      # The bucket/key/endpoint live in backend.tofu (added at bootstrap).
+      # R2 is S3-compatible: the S3 backend takes credentials from AWS_* env vars
+      # and the endpoint from AWS_ENDPOINT_URL_S3. The endpoint embeds the
+      # Cloudflare account id, which is kept OUT of this public repo (backend.tofu
+      # carries only bucket/key/region).
       - name: Tofu init
         env:
           AWS_ACCESS_KEY_ID: ${{ env.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ env.R2_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL_S3: https://${{ env.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: tofu init -input=false
 
       - name: Tofu apply
         env:
           AWS_ACCESS_KEY_ID: ${{ env.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ env.R2_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL_S3: https://${{ env.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: tofu apply -input=false -auto-approve
