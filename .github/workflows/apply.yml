@@ -55,12 +55,12 @@ jobs:
           cloud_region: us
           # BWS secret ids in the noah@separationofconcerns.dev vault. These are
           # identifiers, not secrets — resolving them requires BWS_ACCESS_TOKEN.
-          # TODO(NWSOC-23): replace the two remaining placeholders.
+          # TODO(NWSOC-23): replace the TF_VAR_grafana_sa_token placeholder.
           secrets: |
             00000000-0000-0000-0000-000000000000 > TF_VAR_grafana_sa_token
             36a8e1ce-3785-4989-bcd1-b482001dde58 > R2_ACCESS_KEY_ID
             b27d82c5-5bb8-49bc-83cf-b482001e36c8 > R2_SECRET_ACCESS_KEY
-            00000000-0000-0000-0000-000000000003 > CLOUDFLARE_ACCOUNT_ID
+            2fea4609-0d6b-4d8d-b9b5-b39b002de85b > CLOUDFLARE_ACCOUNT_ID
 
       - name: Set up OpenTofu
         uses: opentofu/setup-opentofu@v1
