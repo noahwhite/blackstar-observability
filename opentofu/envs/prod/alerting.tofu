@@ -615,4 +615,97 @@ resource "grafana_rule_group" "node_health" {
       })
     }
   }
+
+  # The failure the AER rules above are a proxy for: the Thunderbolt->SFP+ NIC
+  # dies and the node is silently partitioned from the Ceph cluster network.
+  # This watches the thing that actually matters, and is deliberately
+  # INDEPENDENT of the AER counters, ceph-mon memory and PagerDuty thresholds —
+  # on 2026-08-20 the AER exporter recorded the fault correctly and nothing
+  # alerted, so the node sat off the Ceph net for ~94h (OFF-633 / OFF-735).
+  #
+  # Why the node still looks healthy: only enp8s0 (10G, Ceph) dies. eno1 (1G,
+  # mgmt) keeps working, so up==1, node_exporter keeps reporting and the Proxmox
+  # UI is fine. A guest VM on Ceph storage even shows "running" while its guest
+  # is wedged on I/O.
+  #
+  # rx+tx summed so this fires only when the link is completely dead in both
+  # directions. Threshold is <1 B/s rather than ==0 to stay robust to float
+  # rounding; healthy baseline is ~1-10 MB/s.
+  #
+  # NOTE: fails open if the whole node dies (series vanishes -> no_data -> OK).
+  # That is intentional — a fully-down node is covered by the other Node Health
+  # rules; this one exists for the up-but-partitioned case they all miss.
+  rule {
+    name      = "Ceph Network Down (enp8s0)"
+    condition = "C"
+    for       = "5m"
+
+    no_data_state  = "OK"
+    exec_err_state = "Error"
+
+    annotations = {
+      summary     = "Ceph 10G network dead on {{ $labels.instance }} — zero traffic on enp8s0"
+      description = "enp8s0 has passed no traffic in either direction for 5 minutes while the node is still reporting. The Thunderbolt->SFP+ NIC has died (usually a fatal PCIe AER, type=Inaccessible) and the node is partitioned from 10.10.10.0/24 — its OSDs will go down/out and its ceph-mon will fall out of quorum and leak memory until OOM. Recovery: mask ceph-mon, 'qm stop <vmid>' (needs SIGKILL, the guest wedges on Ceph I/O), set nobackfill/norecover, reboot, verify jumbo to the 10.10.10.x peers, then unmask and unset the flags."
+    }
+
+    labels = {
+      severity = "critical"
+      team     = "blackstar"
+    }
+
+    data {
+      ref_id         = "A"
+      datasource_uid = data.grafana_data_source.prometheus.uid
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      model = jsonencode({
+        datasource   = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
+        editorMode   = "code"
+        expr         = "sum by (instance) (rate(node_network_receive_bytes_total{job=\"integrations/unix\", device=\"enp8s0\"}[5m]) + rate(node_network_transmit_bytes_total{job=\"integrations/unix\", device=\"enp8s0\"}[5m]))"
+        legendFormat = "{{ instance }}"
+        refId        = "A"
+      })
+    }
+
+    data {
+      ref_id         = "B"
+      datasource_uid = "__expr__"
+      relative_time_range {
+        from = 0
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "__expr__", uid = "__expr__" }
+        expression = "A"
+        reducer    = "last"
+        refId      = "B"
+        type       = "reduce"
+      })
+    }
+
+    data {
+      ref_id         = "C"
+      datasource_uid = "__expr__"
+      relative_time_range {
+        from = 0
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "__expr__", uid = "__expr__" }
+        expression = "B"
+        refId      = "C"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { params = [1], type = "lt" }
+          operator  = { type = "and" }
+          query     = { params = ["B"] }
+          reducer   = { params = [], type = "last" }
+          type      = "query"
+        }]
+      })
+    }
+  }
+
 }
