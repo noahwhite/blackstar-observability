@@ -40,13 +40,13 @@ resource "grafana_dashboard" "node_health" {
         },
         {
           type       = "query"
-          name       = "css610_port"
-          label      = "CSS610 Port"
+          name       = "crs310_port"
+          label      = "CRS310 Port"
           datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
-          query      = "label_values(ifOperStatus{job=\"integrations/snmp/css610\"}, ifDescr)"
+          query      = "label_values(ifOperStatus{job=\"integrations/snmp/crs310\"}, ifDescr)"
           refresh    = 1
           sort       = 1
-          current    = { text = "Port1", value = "Port1" }
+          current    = { text = "ether1", value = "ether1" }
         },
       ]
     }
@@ -749,7 +749,7 @@ resource "grafana_dashboard" "node_health" {
           overrides = []
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
-        # mtxrHlSensorValue (mtxrHlSensorTable) reports direct Celsius (no /10). The CSS610
+        # mtxrHlSensorValue (mtxrHlSensorTable) reports direct Celsius (no /10). The CRS310
         # temp has its own stat in the Management Switch section (id 94).
         targets = [
           {
@@ -1158,18 +1158,18 @@ resource "grafana_dashboard" "node_health" {
       },
 
       # =================================================================
-      # Management Switch (MikroTik CSS610)
+      # Management Switch (MikroTik CRS310)
       # =================================================================
       {
         type      = "row"
-        title     = "Management Switch (CSS610)"
+        title     = "Management Switch (CRS310)"
         gridPos   = { h = 1, w = 24, x = 0, y = 110 }
         collapsed = false
       },
       {
         id         = 80
         type       = "stat"
-        title      = "CSS610 Uptime"
+        title      = "CRS310 Uptime"
         gridPos    = { h = 6, w = 4, x = 0, y = 111 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
@@ -1187,7 +1187,7 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "none", colorMode = "value", textMode = "auto" }
         targets = [{
-          expr         = "sysUpTime{job=\"integrations/snmp/css610\"} / 100"
+          expr         = "sysUpTime{job=\"integrations/snmp/crs310\"} / 100"
           legendFormat = "Uptime"
           refId        = "A"
           instant      = true
@@ -1196,7 +1196,7 @@ resource "grafana_dashboard" "node_health" {
       {
         id         = 81
         type       = "gapit-htmlgraphics-panel"
-        title      = "CSS610 Port Map"
+        title      = "CRS310 Port Map"
         gridPos    = { h = 6, w = 16, x = 4, y = 111 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
@@ -1258,18 +1258,18 @@ resource "grafana_dashboard" "node_health" {
 
           html = <<-EOT
           <div class="switch-wrapper">
-            <div class="switch-container" style="aspect-ratio:530/114">
-              <img src="https://raw.githubusercontent.com/noahwhite/blackstar-observability/main/assets/css610-front.jpg" class="switch-bg" />
-              <div class="port-overlay" data-port="Port2" title="Port2" style="left:47.4%;top:31%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="Port1" title="Port1" style="left:47.4%;top:63%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="Port4" title="Port4" style="left:55.4%;top:31%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="Port3" title="Port3" style="left:55.4%;top:63%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="Port6" title="Port6" style="left:63.4%;top:31%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="Port5" title="Port5" style="left:63.4%;top:63%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="Port8" title="Port8" style="left:71.4%;top:31%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="Port7" title="Port7" style="left:71.4%;top:63%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="SFP+1" title="SFP+1" style="left:82%;top:68%;width:4%;height:10%"></div>
-              <div class="port-overlay" data-port="SFP+2" title="SFP+2" style="left:91%;top:68%;width:4%;height:10%"></div>
+            <div class="switch-container" style="aspect-ratio:978/206">
+              <img src="https://raw.githubusercontent.com/noahwhite/blackstar-observability/main/assets/crs310-front.jpg" class="switch-bg" />
+              <div class="port-overlay" data-port="ether2" title="ether2" style="left:43.6%;top:35.8%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="ether1" title="ether1" style="left:43.6%;top:67.6%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="ether4" title="ether4" style="left:50.6%;top:35.8%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="ether3" title="ether3" style="left:50.6%;top:67.3%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="ether6" title="ether6" style="left:57.7%;top:35.8%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="ether5" title="ether5" style="left:57.6%;top:67.8%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="ether8" title="ether8" style="left:64.7%;top:35.8%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="ether7" title="ether7" style="left:64.5%;top:67.6%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="sfp-sfpplus1" title="sfp-sfpplus1" style="left:73.5%;top:69.8%;width:4%;height:10%"></div>
+              <div class="port-overlay" data-port="sfp-sfpplus2" title="sfp-sfpplus2" style="left:82.5%;top:69.8%;width:4%;height:10%"></div>
             </div>
           </div>
           EOT
@@ -1278,7 +1278,7 @@ resource "grafana_dashboard" "node_health" {
           htmlNode.querySelectorAll('.port-overlay').forEach(function(el) {
             el.addEventListener('click', function() {
               var update = {};
-              update['var-css610_port'] = el.dataset.port;
+              update['var-crs310_port'] = el.dataset.port;
               htmlGraphics.locationService.partial(update, true);
               htmlNode.querySelectorAll('.port-overlay').forEach(function(o) {
                 o.classList.toggle('selected', o.dataset.port === el.dataset.port);
@@ -1304,7 +1304,7 @@ resource "grafana_dashboard" "node_health" {
             });
           }
           var params = new URLSearchParams(window.location.search);
-          var selected = params.get('var-css610_port');
+          var selected = params.get('var-crs310_port');
           htmlNode.querySelectorAll('.port-overlay').forEach(function(el) {
             var port = el.dataset.port;
             var status = statusMap[port];
@@ -1323,7 +1323,7 @@ resource "grafana_dashboard" "node_health" {
           EOT
         }
         targets = [{
-          expr         = "ifOperStatus{job=\"integrations/snmp/css610\"}"
+          expr         = "ifOperStatus{job=\"integrations/snmp/crs310\"}"
           legendFormat = "{{ ifDescr }}"
           refId        = "A"
           instant      = true
@@ -1332,7 +1332,7 @@ resource "grafana_dashboard" "node_health" {
       {
         id         = 94
         type       = "stat"
-        title      = "CSS610 Temperature"
+        title      = "CRS310 Temperature"
         gridPos    = { h = 6, w = 4, x = 20, y = 111 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
@@ -1353,7 +1353,7 @@ resource "grafana_dashboard" "node_health" {
         options = { reduceOptions = { calcs = ["lastNotNull"] }, graphMode = "area", colorMode = "value", textMode = "auto" }
         targets = [
           {
-            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/css610\"}"
+            expr         = "mtxrHlSensorValue{job=\"integrations/snmp/crs310\"}"
             legendFormat = "CPU"
             refId        = "A"
             instant      = true
@@ -1363,7 +1363,7 @@ resource "grafana_dashboard" "node_health" {
       {
         id         = 82
         type       = "timeseries"
-        title      = "CSS610 Port Traffic"
+        title      = "CRS310 Port Traffic"
         gridPos    = { h = 8, w = 24, x = 0, y = 117 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
@@ -1372,16 +1372,16 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { tooltip = { mode = "multi", sort = "desc" }, legend = { displayMode = "table", placement = "bottom", calcs = ["lastNotNull"] } }
         targets = [
-          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/css610\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Rx", refId = "A" },
-          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/css610\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/crs310\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/crs310\"}[$__rate_interval]) * 8", legendFormat = "{{ ifDescr }} Tx", refId = "B" },
         ]
       },
 
-      # CSS610 Port Detail (drill-down from port map clicks)
+      # CRS310 Port Detail (drill-down from port map clicks)
       {
         id         = 90
         type       = "timeseries"
-        title      = "Port Traffic — $css610_port"
+        title      = "Port Traffic — $crs310_port"
         gridPos    = { h = 8, w = 16, x = 0, y = 125 }
         datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
         fieldConfig = {
@@ -1390,8 +1390,8 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { tooltip = { mode = "multi" } }
         targets = [
-          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/css610\",ifDescr=\"$css610_port\"}[$__rate_interval]) * 8", legendFormat = "$css610_port Rx", refId = "A" },
-          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/css610\",ifDescr=\"$css610_port\"}[$__rate_interval]) * 8", legendFormat = "$css610_port Tx", refId = "B" },
+          { expr = "rate(ifHCInOctets{job=\"integrations/snmp/crs310\",ifDescr=\"$crs310_port\"}[$__rate_interval]) * 8", legendFormat = "$crs310_port Rx", refId = "A" },
+          { expr = "rate(ifHCOutOctets{job=\"integrations/snmp/crs310\",ifDescr=\"$crs310_port\"}[$__rate_interval]) * 8", legendFormat = "$crs310_port Tx", refId = "B" },
         ]
       },
       {
@@ -1419,7 +1419,7 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { reduceOptions = { calcs = ["lastNotNull"] }, colorMode = "background" }
         targets = [{
-          expr         = "ifOperStatus{job=\"integrations/snmp/css610\",ifDescr=\"$css610_port\"}"
+          expr         = "ifOperStatus{job=\"integrations/snmp/crs310\",ifDescr=\"$crs310_port\"}"
           legendFormat = "Status"
           refId        = "A"
           instant      = true
@@ -1443,7 +1443,7 @@ resource "grafana_dashboard" "node_health" {
           overrides = []
         }
         targets = [{
-          expr         = "ifHighSpeed{job=\"integrations/snmp/css610\",ifDescr=\"$css610_port\"}"
+          expr         = "ifHighSpeed{job=\"integrations/snmp/crs310\",ifDescr=\"$crs310_port\"}"
           legendFormat = "Speed"
           refId        = "A"
           instant      = true
@@ -1476,7 +1476,7 @@ resource "grafana_dashboard" "node_health" {
         }
         options = { tooltip = { mode = "single" } }
         targets = [{
-          expr         = "ifOperStatus{job=\"integrations/snmp/css610\",ifDescr=\"$css610_port\"}"
+          expr         = "ifOperStatus{job=\"integrations/snmp/crs310\",ifDescr=\"$crs310_port\"}"
           legendFormat = "Status"
           refId        = "A"
         }]
